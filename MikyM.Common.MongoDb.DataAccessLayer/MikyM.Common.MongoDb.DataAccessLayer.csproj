@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<PackageId>MikyM.Common.MongoDb.DataAccessLayer</PackageId>
+		<Version>1.0.0</Version>
+		<Authors>Krzysztof Kupisz</Authors>
+		<PackageDescription>MongoDb data access layer.</PackageDescription>
+		<RepositoryUrl>https://github.com/MikyM/MikyM.Common.MongoDb.DataAccessLayer</RepositoryUrl>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<GenerateDocumentationFile>True</GenerateDocumentationFile>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Autofac" Version="6.3.0" />
+		<PackageReference Include="AutoMapper" Version="11.0.1" />
+		<PackageReference Include="JetBrains.Annotations" Version="2021.3.0" />
+		<PackageReference Include="MikyM.Autofac.Extensions" Version="1.0.5" />
+		<PackageReference Include="MikyM.Common.Domain" Version="1.0.3" />
+		<PackageReference Include="MikyM.Common.Utilities" Version="1.0.6" />
+		<PackageReference Include="MongoDB.Bson" Version="2.15.0" />
+		<PackageReference Include="MongoDB.Driver" Version="2.15.0" />
+		<PackageReference Include="MongoDB.Driver.Core" Version="2.15.0" />
+		<PackageReference Include="MongoDB.Entities" Version="20.26.3" />
+	</ItemGroup>
+
+</Project>
