@@ -53,9 +53,13 @@ public class MongoDbDataAccessConfiguration : IOptions<MongoDbDataAccessConfigur
     }
 
     /// <summary>
-    /// Gets or set settings for <see cref="IdGenerator"/>
+    /// Gets or sets settings for <see cref="IdGenerator"/>
     /// </summary>
     public IdGeneratorOptions? IdGeneratorOptions { get; set; }
+    /// <summary>
+    /// Gets or sets the Id for <see cref="IdGenerator"/>
+    /// </summary>
+    public int IdGeneratorId { get; set; }
 
     /// <summary>
     /// Instance of options

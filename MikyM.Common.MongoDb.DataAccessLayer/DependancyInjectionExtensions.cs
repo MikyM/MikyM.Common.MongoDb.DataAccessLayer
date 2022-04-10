@@ -24,7 +24,7 @@ public static class DependancyInjectionExtensions
 
         if (config.IdGeneratorOptions is not null)
         {
-            var sub = builder.Register(_ => new IdGenerator(0, config.IdGeneratorOptions))
+            var sub = builder.Register(_ => new IdGenerator(config.IdGeneratorId, config.IdGeneratorOptions))
                 .AsSelf()
                 .SingleInstance();
         }
