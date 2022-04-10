@@ -5,12 +5,20 @@
 /// </summary>
 public class PaginationFilter
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public PaginationFilter()
     {
         PageNumber = 1;
         PageSize = 10;
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="pageNumber"></param>
+    /// <param name="pageSize"></param>
     public PaginationFilter(int pageNumber, int pageSize)
     {
         PageNumber = pageNumber < 1 ? 1 : pageNumber;

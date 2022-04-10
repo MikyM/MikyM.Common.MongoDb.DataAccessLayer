@@ -12,6 +12,11 @@ namespace MikyM.Common.MongoDb.DataAccessLayer.Repositories;
 public interface IReadOnlyMongoDbRepository<TEntity> : IBaseRepository where TEntity : SnowflakeEntity
 {
     /// <summary>
+    /// Entity type that this repository was created for
+    /// </summary>
+    Type EntityType { get; }
+    
+    /// <summary>
     /// Gets an entity based on given id
     /// </summary>
     /// <param name="id">Id of the entity</param>

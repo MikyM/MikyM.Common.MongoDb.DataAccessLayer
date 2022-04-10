@@ -12,6 +12,9 @@ namespace MikyM.Common.MongoDb.DataAccessLayer.Repositories;
 /// <inheritdoc cref="IReadOnlyMongoDbRepository{TEntity}"/>
 public class ReadOnlyMongoDbRepository<TEntity> : IReadOnlyMongoDbRepository<TEntity> where TEntity : SnowflakeEntity
 {
+    /// <inheritdoc />
+    public Type EntityType => typeof(TEntity);
+
     /// <summary>
     /// Current <see cref="Transaction"/>
     /// </summary>

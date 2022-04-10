@@ -1,6 +1,8 @@
 ﻿using System.Collections.Concurrent;
-using Autofac;
-using Autofac.Core;
+using System.Globalization;
+using System.Reflection;
+using Microsoft.Extensions.Options;
+using MikyM.Common.MongoDb.DataAccessLayer.Helpers;
 using MikyM.Common.MongoDb.DataAccessLayer.Repositories;
 using MongoDB.Entities;
 
@@ -12,51 +14,88 @@ namespace MikyM.Common.MongoDb.DataAccessLayer.UnitOfWork;
 /// <inheritdoc cref="IMongoDbUnitOfWork"/>
 public sealed class MongoDbUnitOfWork : IMongoDbUnitOfWork
 {
-    /// <summary>
-    /// Inner root <see cref="ILifetimeScope"/>
-    /// </summary>
-    private readonly ILifetimeScope _lifetimeScope;
-
     // To detect redundant calls
     private bool _disposed;
     // ReSharper disable once InconsistentNaming
+
+    private readonly IOptions<MongoDbDataAccessConfiguration> _options;
 
     /// <summary>
     /// Repository cache
     /// </summary>
     private ConcurrentDictionary<string, IBaseRepository>? _repositories;
-
     /// <summary>
-    /// Inner <see cref="Transaction"/>
+    /// Repository entity type cache
     /// </summary>
-    private Transaction _transaction;
+    private ConcurrentDictionary<string, string>? _entityTypesOfRepositories;
+
+    /// <inheritdoc/>
+    public Transaction Transaction { get; private set; }
 
     /// <summary>
     /// Creates a new instance of <see cref="MongoDbUnitOfWork"/>
     /// </summary>
-    /// <param name="lifetimeScope">Root <see cref="ILifetimeScope"/></param>
-    public MongoDbUnitOfWork(ILifetimeScope lifetimeScope)
+    public MongoDbUnitOfWork(IOptions<MongoDbDataAccessConfiguration> options)
     {
-        _transaction = DB.Transaction();
-        _lifetimeScope = lifetimeScope;
+        Transaction = DB.Transaction();
+        _options = options;
+    }
+    
+    /// <summary>
+    /// Creates a new instance of <see cref="MongoDbUnitOfWork"/>
+    /// </summary>
+    public MongoDbUnitOfWork(string database, IOptions<MongoDbDataAccessConfiguration> options)
+    {
+        Transaction = DB.Transaction(database);
+        _options = options;
     }
 
     /// <inheritdoc />
     public TRepository GetRepository<TRepository>() where TRepository : class, IBaseRepository
     {
         _repositories ??= new ConcurrentDictionary<string, IBaseRepository>();
+        _entityTypesOfRepositories ??= new ConcurrentDictionary<string, string>();
 
         var type = typeof(TRepository);
         string name = type.FullName ?? throw new InvalidOperationException();
+        var entityType = type.GetGenericArguments().FirstOrDefault();
+        if (entityType is null)
+            throw new ArgumentException("Couldn't retrieve entity type from generic arguments on repository type");
 
-        if (_repositories.TryGetValue(name, out var repository)) return (TRepository) repository;
+        if (type.IsInterface)
+        {
+            if (!UoFCache.CachedRepositoryInterfaceImplTypes.TryGetValue(type, out var implType))
+                throw new InvalidOperationException($"Couldn't find a non-abstract implementation of {name}");
 
-        if (_repositories.TryAdd(name,
-                _lifetimeScope.Resolve<TRepository>(new ResolvedParameter(
-                    (pi, _) => pi.ParameterType.IsAssignableTo(typeof(Transaction)), (_, _) => _transaction))))
+            type = implType;
+            name = implType.FullName ?? throw new InvalidOperationException();
+        }
+        
+        if (_repositories.TryGetValue(name, out var repository)) 
+            return (TRepository)repository;
+
+        if (_entityTypesOfRepositories.TryGetValue(entityType.Name, out _))
+            throw new InvalidOperationException(
+                "Seems like you tried to create a different type of repository (ie. both read-only and crud) for same entity type within same unit of work instance - it is not supported as it may lead to unexpected results");
+
+        var instance = Activator.CreateInstance(type,
+            BindingFlags.NonPublic | BindingFlags.Instance, null, new object[]
+            {
+                Transaction
+            }, CultureInfo.InvariantCulture);
+
+        if (instance is null) throw new InvalidOperationException($"Couldn't create an instance of {name}");
+
+        var castInstance = (TRepository)instance;
+        
+        if (_repositories.TryAdd(name, castInstance))
+        {
+            _entityTypesOfRepositories.TryAdd(entityType.Name, entityType.Name);
             return (TRepository)_repositories[name];
+        }
 
-        if (_repositories.TryGetValue(name, out repository)) return (TRepository) repository;
+        if (_repositories.TryGetValue(name, out repository)) 
+            return (TRepository)repository;
 
         throw new InvalidOperationException(
             $"Repository of type {name} couldn't be added to and/or retrieved.");
@@ -65,24 +104,30 @@ public sealed class MongoDbUnitOfWork : IMongoDbUnitOfWork
     /// <inheritdoc />
     public async Task RollbackAsync()
     {
-        await _transaction.AbortAsync();
+        await Transaction.AbortAsync();
     }
 
     /// <inheritdoc />
     public async Task CommitAsync()
     {
-        await _transaction.CommitAsync();
-        _transaction?.Dispose();
-        _transaction = DB.Transaction();
+        if (_options.Value.OnBeforeSaveChanges is not null)
+            await _options.Value.OnBeforeSaveChanges.Invoke(this);
+        
+        await Transaction.CommitAsync();
+        Transaction?.Dispose();
+        Transaction = DB.Transaction();
     }
 
     /// <inheritdoc />
     public async Task CommitAsync(string userId)
     {
-        _transaction.ModifiedBy = new AuditEntry(userId);
-        await _transaction.CommitAsync();
-        _transaction?.Dispose();
-        _transaction = DB.Transaction();
+        if (_options.Value.OnBeforeSaveChanges is not null)
+            await _options.Value.OnBeforeSaveChanges.Invoke(this);
+        
+        Transaction.ModifiedBy = new AuditEntry(userId);
+        await Transaction.CommitAsync();
+        Transaction?.Dispose();
+        Transaction = DB.Transaction();
     }
 
     // Public implementation of Dispose pattern callable by consumers.
@@ -100,10 +145,11 @@ public sealed class MongoDbUnitOfWork : IMongoDbUnitOfWork
 
         if (disposing)
         {
-            _transaction?.Dispose();
+            Transaction?.Dispose();
         }
 
         _repositories = null;
+        _entityTypesOfRepositories = null;
 
         _disposed = true;
     }

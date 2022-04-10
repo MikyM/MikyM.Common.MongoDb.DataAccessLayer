@@ -1,10 +1,7 @@
 ﻿using Autofac;
 using IdGen;
-using MikyM.Autofac.Extensions;
-using MikyM.Common.Domain;
-using MikyM.Common.MongoDb.DataAccessLayer.Repositories;
+using Microsoft.Extensions.Options;
 using MikyM.Common.MongoDb.DataAccessLayer.UnitOfWork;
-using MongoDB.Entities;
 
 namespace MikyM.Common.MongoDb.DataAccessLayer;
 
@@ -18,10 +15,12 @@ public static class DependancyInjectionExtensions
     /// </summary>
     /// <param name="builder">Current instance of <see cref="ContainerBuilder"/></param>
     /// <param name="options"><see cref="Action"/> that configures DAL.</param>
-    public static void AddMongoDbDataAccessLayer(this ContainerBuilder builder, Action<MongoDbDataAccessOptions>? options = null)
+    public static void AddMongoDbDataAccessLayer(this ContainerBuilder builder, Action<MongoDbDataAccessConfiguration>? options = null)
     {
-        var config = new MongoDbDataAccessOptions(builder);
+        var config = new MongoDbDataAccessConfiguration(builder);
         options?.Invoke(config);
+
+        builder.Register(x => config).As<IOptions<MongoDbDataAccessConfiguration>>().SingleInstance();
 
         if (config.IdGeneratorOptions is not null)
         {
@@ -30,17 +29,13 @@ public static class DependancyInjectionExtensions
                 .SingleInstance();
         }
 
-        var ctorFinder = new AllConstructorsFinder();
-
-        builder.RegisterGeneric(typeof(ReadOnlyMongoDbRepository<>))
-            .As(typeof(IReadOnlyMongoDbRepository<>))
-            .FindConstructorsWith(ctorFinder)
+        builder.RegisterType<MongoDbUnitOfWorkFactory>().As<IMongoDbUnitOfWorkFactory>().InstancePerLifetimeScope();
+        builder.RegisterType<MongoDbUnitOfWork>().As<IMongoDbUnitOfWork>().UsingConstructor(typeof(IOptions<MongoDbDataAccessConfiguration>))
             .InstancePerLifetimeScope();
-        builder.RegisterGeneric(typeof(MongoDbRepository<>))
-            .As(typeof(IMongoDbRepository<>))
-            .FindConstructorsWith(ctorFinder)
-            .InstancePerLifetimeScope();
-        builder.RegisterType<MongoDbUnitOfWork>().As<IMongoDbUnitOfWork>().InstancePerLifetimeScope();
-        builder.RegisterType<Transaction>().AsSelf().InstancePerLifetimeScope();
+        
+        if (config.Databases is not null && config.Databases.Length > 0)
+            foreach (var database in config.Databases)
+                builder.RegisterType<MongoDbUnitOfWork>().Named<IMongoDbUnitOfWork>(database)
+                    .UsingConstructor(typeof(string), typeof(IOptions<MongoDbDataAccessConfiguration>)).WithParameter("database", database).InstancePerLifetimeScope();
     }
 }

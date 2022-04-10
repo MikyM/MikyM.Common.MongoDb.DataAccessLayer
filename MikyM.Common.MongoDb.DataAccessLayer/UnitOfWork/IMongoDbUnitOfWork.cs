@@ -1,4 +1,5 @@
 ﻿using MikyM.Common.MongoDb.DataAccessLayer.Repositories;
+using MongoDB.Entities;
 
 namespace MikyM.Common.MongoDb.DataAccessLayer.UnitOfWork;
 
@@ -7,6 +8,11 @@ namespace MikyM.Common.MongoDb.DataAccessLayer.UnitOfWork;
 /// </summary>
 public interface IMongoDbUnitOfWork : IDisposable
 {
+    /// <summary>
+    /// Inner <see cref="Transaction"/>
+    /// </summary>
+    Transaction Transaction { get; }
+    
     /// <summary>
     /// Gets a repository of a given type
     /// </summary>
