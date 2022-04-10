@@ -12,6 +12,10 @@ public interface IMongoDbUnitOfWork : IDisposable
     /// Inner <see cref="Transaction"/>
     /// </summary>
     Transaction Transaction { get; }
+    /// <summary>
+    /// Name of the database for which this unit of work was created
+    /// </summary>
+    public string Database { get; }
     
     /// <summary>
     /// Gets a repository of a given type

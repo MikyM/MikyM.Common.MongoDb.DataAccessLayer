@@ -27,7 +27,11 @@ public class ReadOnlyMongoDbRepository<TEntity> : IReadOnlyMongoDbRepository<TEn
 
     /// <inheritdoc />
     public virtual async Task<TEntity?> GetAsync(string id)
-        => await DB.Find<TEntity>().OneAsync(id);
+        => await DB.Find<TEntity, TEntity>().OneAsync(id);
+    
+    /// <inheritdoc />
+    public virtual async Task<TProjectTo?> GetAsync<TProjectTo>(string id)
+        => await DB.Find<TEntity, TProjectTo>().OneAsync(id);
 
     /// <inheritdoc />
     public virtual async Task<long> LongCountAsync()

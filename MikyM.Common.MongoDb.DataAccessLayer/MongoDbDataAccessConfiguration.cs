@@ -1,4 +1,5 @@
-﻿using Autofac;
+﻿using System.Collections.Generic;
+using Autofac;
 using IdGen;
 using Microsoft.Extensions.Options;
 using MikyM.Common.MongoDb.DataAccessLayer.UnitOfWork;
@@ -20,7 +21,7 @@ public class MongoDbDataAccessConfiguration : IOptions<MongoDbDataAccessConfigur
     }
 
     private readonly ContainerBuilder _builder;
-    private Func<IMongoDbUnitOfWork, Task>? _onBeforeSaveChanges;
+    private Dictionary<string, Func<IMongoDbUnitOfWork, Task>>? _onBeforeSaveChangesActions;
     private string[]? _databases;
 
     /// <summary>
@@ -31,13 +32,21 @@ public class MongoDbDataAccessConfiguration : IOptions<MongoDbDataAccessConfigur
     /// <summary>
     /// Action to execute before each <see cref="IMongoDbUnitOfWork.CommitAsync()"/>
     /// </summary>
-    public Func<IMongoDbUnitOfWork, Task>? OnBeforeSaveChanges
+    public Dictionary<string, Func<IMongoDbUnitOfWork, Task>>? OnBeforeSaveChangesActions
+        => _onBeforeSaveChangesActions;
+    
+    /// <summary>
+    /// Adds an on before save changes action for a given database
+    /// </summary>
+    /// <param name="action">Action to perform</param>
+    /// <param name="database">Name of the database for the action</param>
+    /// <exception cref="NotSupportedException">Throw when trying to register second action for same context type</exception>
+    public void AddOnBeforeSaveChangesAction(string database, Func<IMongoDbUnitOfWork, Task> action)
     {
-        get => _onBeforeSaveChanges;
-        set
-        {
-            _onBeforeSaveChanges = value;
-        }
+        _onBeforeSaveChangesActions ??= new Dictionary<string, Func<IMongoDbUnitOfWork, Task>>();
+        if (_onBeforeSaveChangesActions.TryGetValue(database, out _))
+            throw new NotSupportedException("Multiple actions for same context aren't supported");
+        _onBeforeSaveChangesActions.Add(database, action);
     }
     
     /// <summary>

@@ -31,6 +31,8 @@ public sealed class MongoDbUnitOfWork : IMongoDbUnitOfWork
 
     /// <inheritdoc/>
     public Transaction Transaction { get; private set; }
+    /// <inheritdoc />
+    public string Database { get; }
 
     /// <summary>
     /// Creates a new instance of <see cref="MongoDbUnitOfWork"/>
@@ -38,6 +40,7 @@ public sealed class MongoDbUnitOfWork : IMongoDbUnitOfWork
     public MongoDbUnitOfWork(IOptions<MongoDbDataAccessConfiguration> options)
     {
         Transaction = DB.Transaction();
+        Database = "default";
         _options = options;
     }
     
@@ -47,6 +50,7 @@ public sealed class MongoDbUnitOfWork : IMongoDbUnitOfWork
     public MongoDbUnitOfWork(string database, IOptions<MongoDbDataAccessConfiguration> options)
     {
         Transaction = DB.Transaction(database);
+        Database = database;
         _options = options;
     }
 
@@ -110,8 +114,9 @@ public sealed class MongoDbUnitOfWork : IMongoDbUnitOfWork
     /// <inheritdoc />
     public async Task CommitAsync()
     {
-        if (_options.Value.OnBeforeSaveChanges is not null)
-            await _options.Value.OnBeforeSaveChanges.Invoke(this);
+        if (_options.Value.OnBeforeSaveChangesActions is not null &&
+            _options.Value.OnBeforeSaveChangesActions.TryGetValue(Database, out var action))
+            await action.Invoke(this);
         
         await Transaction.CommitAsync();
         Transaction?.Dispose();
@@ -121,8 +126,9 @@ public sealed class MongoDbUnitOfWork : IMongoDbUnitOfWork
     /// <inheritdoc />
     public async Task CommitAsync(string userId)
     {
-        if (_options.Value.OnBeforeSaveChanges is not null)
-            await _options.Value.OnBeforeSaveChanges.Invoke(this);
+        if (_options.Value.OnBeforeSaveChangesActions is not null &&
+            _options.Value.OnBeforeSaveChangesActions.TryGetValue(Database, out var action))
+            await action.Invoke(this);
         
         Transaction.ModifiedBy = new AuditEntry(userId);
         await Transaction.CommitAsync();

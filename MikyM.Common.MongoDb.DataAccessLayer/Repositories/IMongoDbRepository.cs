@@ -58,23 +58,10 @@ public interface IMongoDbRepository<TEntity> : IReadOnlyMongoDbRepository<TEntit
     /// </summary>
     /// <param name="ids">Ids of the entities to disable</param>
     Task DisableRangeAsync(IEnumerable<string> ids);
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="entity"></param>
-    /// <returns></returns>
+    /// <inheritdoc cref="DB.Update{TEntity}"/>
     Update<TEntity> Update(TEntity entity);
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="entity"></param>
-    /// <returns></returns>
+    /// <inheritdoc cref="DB.UpdateAndGet{TEntity}"/>
     UpdateAndGet<TEntity, TEntity> UpdateAndGet(TEntity entity);
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="entity"></param>
-    /// <typeparam name="TProjection"></typeparam>
-    /// <returns></returns>
+    /// <inheritdoc cref="DB.UpdateAndGet{TEntity,TProjection}"/>
     UpdateAndGet<TEntity, TProjection> UpdateAndGet<TProjection>(TEntity entity);
 }

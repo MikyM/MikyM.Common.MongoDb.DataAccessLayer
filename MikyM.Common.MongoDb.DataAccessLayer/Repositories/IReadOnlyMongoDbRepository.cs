@@ -2,6 +2,7 @@
 using System.Threading;
 using MongoDB.Driver;
 using MongoDB.Entities;
+#pragma warning disable CS1574, CS1584, CS1581, CS1580
 
 namespace MikyM.Common.MongoDb.DataAccessLayer.Repositories;
 
@@ -24,6 +25,14 @@ public interface IReadOnlyMongoDbRepository<TEntity> : IBaseRepository where TEn
     Task<TEntity?> GetAsync(string id);
 
     /// <summary>
+    /// Gets an entity based on given id and projects it to another type
+    /// </summary>
+    /// <param name="id">Id of the entity</param>
+    /// <typeparam name="TProjectTo">Type to which the entity should be projected</typeparam>
+    /// <returns>Entity if found, null if not found</returns>
+    Task<TProjectTo?> GetAsync<TProjectTo>(string id);
+
+    /// <summary>
     /// Gets all entities
     /// </summary>
     /// <returns><see cref="IReadOnlyList{T}"/> with all entities</returns>
@@ -35,58 +44,61 @@ public interface IReadOnlyMongoDbRepository<TEntity> : IBaseRepository where TEn
     /// <returns><see cref="IReadOnlyList{T}"/> with all entities</returns>
     Task<IReadOnlyList<TProjectTo>> GetAllAsync<TProjectTo>() where TProjectTo : class;
 
-    /// <inheritdoc />
+    /// <inheritdoc cref="DB.Find{TEntity}"/>
     Find<TEntity> Find();
 
-    /// <inheritdoc />
+    /// <inheritdoc cref="DB.Find{TEntity, TProjection}"/>
     Find<TEntity, TProjection> Find<TProjection>();
 
-    /// <inheritdoc />
+    /// <inheritdoc cref="DB.Distinct{TEntity, TProperty}"/>
     Distinct<TEntity, TProperty> Distinct<TProperty>();
 
-    /// <inheritdoc />
+    /// <inheritdoc cref="DB.Fluent{TEntity}"/>
     IAggregateFluent<TEntity> Fluent();
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Retrieves the count of the entities
+    /// </summary>
+    /// <returns>Count of the entities</returns>
     Task<long> CountAsync();
 
-    /// <inheritdoc />
+    /// <inheritdoc cref="DB.CountEstimatedAsync{TEntity}"/>
     Task<long> CountEstimatedAsync();
 
-    /// <inheritdoc />
+    /// <inheritdoc cref="DB.CountAsync{TEntity}(FilterDefinition{TEntity})"/>
     Task<long> CountAsync(FilterDefinition<TEntity> filterDefinition);
 
-    /// <inheritdoc />
+    /// <inheritdoc cref="DB.CountAsync(Func{FilterDefinitionBuilder{TEntity}}, FilterDefinition{TEntity})"/>
     Task<long> CountAsync(
         Func<FilterDefinitionBuilder<TEntity>, FilterDefinition<TEntity>> filterDefinitionBuilder);
 
-    /// <inheritdoc />
+    /// <inheritdoc cref="DB.PagedSearch{TProjection}"/>
     PagedSearch<TEntity> PagedSearch();
 
-    /// <inheritdoc />
+    /// <inheritdoc cref="DB.PagedSearch{TProjection}"/>
     PagedSearch<TEntity, TProjection> PagedSearch<TProjection>();
 
-    /// <inheritdoc />
+    /// <inheritdoc cref="DB.PipelineAsync{TResult}"/>
     Task<IReadOnlyList<TResult>> PipelineAsync<TResult>(Template<TEntity, TResult> template,
         AggregateOptions? options = null, CancellationToken cancellationToken = default,
         bool ignoreGlobalFilters = false);
 
-    /// <inheritdoc />
+    /// <inheritdoc cref="DB.FluentTextSearch{TEntity}"/>
     IAggregateFluent<TEntity> FluentTextSearch(Search searchType, string searchTerm,
         bool caseSensitive = false, bool diacriticSensitive = false, string? language = null,
         AggregateOptions? options = null, bool ignoreGlobalFilters = false);
 
-    /// <inheritdoc />
+    /// <inheritdoc cref="DB.PipelineCursorAsync{TResult}"/>
     Task<IAsyncCursor<TResult>> PipelineCursorAsync<TResult>(Template<TEntity, TResult> template,
         AggregateOptions? options = null, CancellationToken cancellationToken = default,
         bool ignoreGlobalFilters = false);
 
-    /// <inheritdoc />
+    /// <inheritdoc cref="DB.PipelineFirstAsync{TResult}"/>
     Task<TResult> PipelineFirstAsync<TResult>(Template<TEntity, TResult> template,
         AggregateOptions? options = null, CancellationToken cancellationToken = default,
         bool ignoreGlobalFilters = false);
 
-    /// <inheritdoc />
+    /// <inheritdoc cref="DB.PipelineSingleAsync{TResult}"/>
     Task<TResult> PipelineSingleAsync<TResult>(Template<TEntity, TResult> template,
         AggregateOptions? options = null, CancellationToken cancellationToken = default,
         bool ignoreGlobalFilters = false);
