@@ -43,12 +43,6 @@ public static class DependancyInjectionExtensions
     public static MongoDbDataAccessConfiguration AddMongoDbContext<TContext>(this MongoDbDataAccessConfiguration configuration,
         string databaseName) where TContext : MongoDbContext
     {
-        if (configuration.GetType().GetField("Builder", BindingFlags.Instance |
-                                                        BindingFlags.NonPublic |
-                                                        BindingFlags.Public)
-                ?.GetValue(configuration) is not ContainerBuilder builder)
-            throw new InvalidOperationException();
-
         configuration.Builder.RegisterType(typeof(TContext)).AsSelf().UsingConstructor(typeof(string))
             .WithParameter("database", databaseName).InstancePerLifetimeScope();
 
