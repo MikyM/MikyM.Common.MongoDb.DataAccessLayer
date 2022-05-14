@@ -23,7 +23,7 @@ public sealed class MongoDbUnitOfWork : IMongoDbUnitOfWork
     /// <summary>
     /// Repository cache
     /// </summary>
-    private ConcurrentDictionary<string, IBaseRepository>? _repositories;
+    private ConcurrentDictionary<string, IRepositoryBase>? _repositories;
     /// <summary>
     /// Repository entity type cache
     /// </summary>
@@ -55,9 +55,9 @@ public sealed class MongoDbUnitOfWork : IMongoDbUnitOfWork
     }
 
     /// <inheritdoc />
-    public TRepository GetRepository<TRepository>() where TRepository : class, IBaseRepository
+    public TRepository GetRepository<TRepository>() where TRepository : class, IRepositoryBase
     {
-        _repositories ??= new ConcurrentDictionary<string, IBaseRepository>();
+        _repositories ??= new ConcurrentDictionary<string, IRepositoryBase>();
         _entityTypesOfRepositories ??= new ConcurrentDictionary<string, string>();
 
         var type = typeof(TRepository);
