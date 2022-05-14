@@ -24,11 +24,6 @@ public class MongoDbDataAccessConfiguration : IOptions<MongoDbDataAccessConfigur
     private Dictionary<string, Func<IMongoDbUnitOfWork, Task>>? _onBeforeSaveChangesActions;
 
     /// <summary>
-    /// Whether to cache include expressions (queries are evaluated faster).
-    /// </summary>
-    public bool EnableIncludeCache { get; set; } = false;
-
-    /// <summary>
     /// Action to execute before each <see cref="IMongoDbUnitOfWork.CommitAsync()"/>
     /// </summary>
     public Dictionary<string, Func<IMongoDbUnitOfWork, Task>>? OnBeforeSaveChangesActions
@@ -61,15 +56,6 @@ public class MongoDbDataAccessConfiguration : IOptions<MongoDbDataAccessConfigur
         Databases ??= new Dictionary<string, string>();
         Databases.Add(database, database);
     }
-
-    /// <summary>
-    /// Gets or sets settings for <see cref="IdGenerator"/>
-    /// </summary>
-    public IdGeneratorOptions? IdGeneratorOptions { get; set; }
-    /// <summary>
-    /// Gets or sets the Id for <see cref="IdGenerator"/>
-    /// </summary>
-    public int IdGeneratorId { get; set; }
 
     /// <summary>
     /// Instance of options
