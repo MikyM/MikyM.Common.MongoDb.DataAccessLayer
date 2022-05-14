@@ -9,8 +9,8 @@ namespace MikyM.Common.MongoDb.DataAccessLayer.Repositories;
 /// <summary>
 /// Read-only repository
 /// </summary>
-/// <typeparam name="TEntity">Entity that derives from <see cref="SnowflakeEntity"/></typeparam>
-public interface IReadOnlyMongoDbRepository<TEntity> : IBaseRepository where TEntity : SnowflakeEntity
+/// <typeparam name="TEntity">Entity that derives from <see cref="SnowflakeMongoDbEntity"/></typeparam>
+public interface IReadOnlyMongoDbRepository<TEntity> : IBaseRepository where TEntity : SnowflakeMongoDbEntity
 {
     /// <summary>
     /// Entity type that this repository was created for

@@ -17,12 +17,11 @@ public class MongoDbDataAccessConfiguration : IOptions<MongoDbDataAccessConfigur
     /// <param name="builder"></param>
     public MongoDbDataAccessConfiguration(ContainerBuilder builder)
     {
-        _builder = builder;
+        Builder = builder;
     }
 
-    private readonly ContainerBuilder _builder;
+    internal readonly ContainerBuilder Builder;
     private Dictionary<string, Func<IMongoDbUnitOfWork, Task>>? _onBeforeSaveChangesActions;
-    private string[]? _databases;
 
     /// <summary>
     /// Whether to cache include expressions (queries are evaluated faster).
@@ -52,13 +51,15 @@ public class MongoDbDataAccessConfiguration : IOptions<MongoDbDataAccessConfigur
     /// <summary>
     /// List of database names if using more than one MongoDb (list also the default one) to register named <see cref="IMongoDbUnitOfWork"/> for
     /// </summary>
-    public string[]? Databases
+    public List<string>? Databases { get; set; }
+
+    /// <summary>
+    /// Adds a database to register named <see cref="IMongoDbUnitOfWork"/> for, if only using one (default) database, there's no need to call this method
+    /// </summary>
+    public void AddDatabase(string database)
     {
-        get => _databases;
-        set
-        {
-            _databases = value;
-        }
+        Databases ??= new List<string>();
+        Databases.Add(database);
     }
 
     /// <summary>

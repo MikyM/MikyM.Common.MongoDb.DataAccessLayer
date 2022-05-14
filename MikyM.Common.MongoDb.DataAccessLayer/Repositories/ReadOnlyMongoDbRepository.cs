@@ -10,7 +10,7 @@ namespace MikyM.Common.MongoDb.DataAccessLayer.Repositories;
 /// Read-only repository
 /// </summary>
 /// <inheritdoc cref="IReadOnlyMongoDbRepository{TEntity}"/>
-public class ReadOnlyMongoDbRepository<TEntity> : IReadOnlyMongoDbRepository<TEntity> where TEntity : SnowflakeEntity
+public class ReadOnlyMongoDbRepository<TEntity> : IReadOnlyMongoDbRepository<TEntity> where TEntity : SnowflakeMongoDbEntity
 {
     /// <inheritdoc />
     public Type EntityType => typeof(TEntity);

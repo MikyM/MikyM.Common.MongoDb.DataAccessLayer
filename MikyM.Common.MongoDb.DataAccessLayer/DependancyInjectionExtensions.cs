@@ -1,6 +1,8 @@
 ﻿using Autofac;
+using Autofac.Extensions.DependencyInjection;
 using IdGen;
 using Microsoft.Extensions.Options;
+using MikyM.Common.Domain;
 using MikyM.Common.MongoDb.DataAccessLayer.UnitOfWork;
 
 namespace MikyM.Common.MongoDb.DataAccessLayer;
@@ -22,20 +24,47 @@ public static class DependancyInjectionExtensions
 
         builder.Register(x => config).As<IOptions<MongoDbDataAccessConfiguration>>().SingleInstance();
 
-        if (config.IdGeneratorOptions is not null)
-        {
-            var sub = builder.Register(_ => new IdGenerator(config.IdGeneratorId, config.IdGeneratorOptions))
-                .AsSelf()
-                .SingleInstance();
-        }
-
         builder.RegisterType<MongoDbUnitOfWorkFactory>().As<IMongoDbUnitOfWorkFactory>().InstancePerLifetimeScope();
         builder.RegisterType<MongoDbUnitOfWork>().As<IMongoDbUnitOfWork>().UsingConstructor(typeof(IOptions<MongoDbDataAccessConfiguration>))
             .InstancePerLifetimeScope();
+
+        if (config.Databases is null || config.Databases.Count <= 0) 
+            return;
         
-        if (config.Databases is not null && config.Databases.Length > 0)
-            foreach (var database in config.Databases)
-                builder.RegisterType<MongoDbUnitOfWork>().Named<IMongoDbUnitOfWork>(database)
-                    .UsingConstructor(typeof(string), typeof(IOptions<MongoDbDataAccessConfiguration>)).WithParameter("database", database).InstancePerLifetimeScope();
+        foreach (var database in config.Databases)
+            builder.RegisterType<MongoDbUnitOfWork>().Named<IMongoDbUnitOfWork>(database)
+                .UsingConstructor(typeof(string), typeof(IOptions<MongoDbDataAccessConfiguration>)).WithParameter("database", database).InstancePerLifetimeScope();
+    }
+    
+    /// <summary>
+    /// Sets factory method for <see cref="IdGeneratorFactory"/>
+    /// </summary>
+    /// <param name="provider">Current instance of <see cref="IServiceProvider"/></param>
+    /// <returns>Current instance of <see cref="IServiceProvider"/></returns>
+    public static IServiceProvider ConfigureIdGeneratorFactory(this IServiceProvider provider)
+    {
+        IdGeneratorFactory.SetFactory(() => provider.GetAutofacRoot().Resolve<IdGenerator>());
+
+        return provider;
+    }
+    
+    /// <summary>
+    /// Registers <see cref="IdGenerator"/> with the container
+    /// </summary>
+    /// <param name="dataAccessOptions"></param>
+    /// <param name="options">Id generator configuration</param>
+    /// <returns>Current <see cref="MongoDbDataAccessConfiguration"/> instance</returns>
+    public static MongoDbDataAccessConfiguration AddSnowflakeIdGenerator(this MongoDbDataAccessConfiguration dataAccessOptions, Action<IdGeneratorConfiguration> options)
+    {
+        var opt = new IdGeneratorConfiguration();
+        options(opt);
+        opt.Validate();
+
+        dataAccessOptions.Builder.Register(_ => new IdGenerator(opt.GeneratorId,
+                new IdGeneratorOptions(opt.IdStructure, opt.DefaultTimeSource, opt.SequenceOverflowStrategy)))
+            .AsSelf()
+            .SingleInstance();
+
+        return dataAccessOptions;
     }
 }

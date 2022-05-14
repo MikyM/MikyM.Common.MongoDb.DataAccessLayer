@@ -10,7 +10,7 @@ namespace MikyM.Common.MongoDb.DataAccessLayer.Repositories;
 /// </summary>
 /// <inheritdoc cref="IMongoDbRepository{TEntity}"/>
 public class MongoDbRepository<TEntity> : ReadOnlyMongoDbRepository<TEntity>, IMongoDbRepository<TEntity>
-    where TEntity : SnowflakeEntity
+    where TEntity : SnowflakeMongoDbEntity
 {
     internal MongoDbRepository(Transaction transaction) : base(transaction)
     {

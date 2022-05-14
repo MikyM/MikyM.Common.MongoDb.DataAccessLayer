@@ -8,8 +8,8 @@ namespace MikyM.Common.MongoDb.DataAccessLayer.Repositories;
 /// <summary>
 /// Repository
 /// </summary>
-/// <typeparam name="TEntity">Entity that derives from <see cref="SnowflakeEntity"/></typeparam>
-public interface IMongoDbRepository<TEntity> : IReadOnlyMongoDbRepository<TEntity> where TEntity : SnowflakeEntity
+/// <typeparam name="TEntity">Entity that derives from <see cref="SnowflakeMongoDbEntity"/></typeparam>
+public interface IMongoDbRepository<TEntity> : IReadOnlyMongoDbRepository<TEntity> where TEntity : SnowflakeMongoDbEntity
 {
     /// <summary>
     /// Adds an entity
