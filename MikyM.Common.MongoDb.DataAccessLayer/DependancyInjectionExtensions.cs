@@ -37,7 +37,7 @@ public static class DependancyInjectionExtensions
         if (config.Databases is null || config.Databases.Count <= 0) 
             return;
         
-        foreach (var database in config.Databases)
+        foreach (var (database, _) in config.Databases)
             builder.RegisterType<MongoDbUnitOfWork>().Named<IMongoDbUnitOfWork>(database)
                 .UsingConstructor(typeof(string), typeof(IOptions<MongoDbDataAccessConfiguration>)).WithParameter("database", database).InstancePerLifetimeScope();
     }
