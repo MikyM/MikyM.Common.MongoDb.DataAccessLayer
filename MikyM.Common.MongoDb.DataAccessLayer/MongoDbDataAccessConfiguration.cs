@@ -42,20 +42,6 @@ public class MongoDbDataAccessConfiguration : IOptions<MongoDbDataAccessConfigur
             throw new NotSupportedException("Multiple actions for same context aren't supported");
         _onBeforeSaveChangesActions.Add(database, action);
     }
-    
-    /// <summary>
-    /// List of database names if using more than one MongoDb (list also the default one) to register named <see cref="IMongoDbUnitOfWork"/> for
-    /// </summary>
-    public Dictionary<string, string>? Databases { get; set; }
-
-    /// <summary>
-    /// Adds a database to register named <see cref="IMongoDbUnitOfWork"/> for, if only using one (default) database, there's no need to call this method
-    /// </summary>
-    public void AddDatabase(string database)
-    {
-        Databases ??= new Dictionary<string, string>();
-        Databases.Add(database, database);
-    }
 
     /// <summary>
     /// Instance of options
