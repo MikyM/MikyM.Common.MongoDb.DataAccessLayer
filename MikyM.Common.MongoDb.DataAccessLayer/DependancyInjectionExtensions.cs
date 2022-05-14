@@ -1,5 +1,7 @@
-﻿using System.Reflection;
+﻿using System.Collections.Generic;
+using System.Reflection;
 using Autofac;
+using Autofac.Core;
 using Microsoft.Extensions.Options;
 using MikyM.Common.DataAccessLayer;
 using MikyM.Common.MongoDb.DataAccessLayer.Context;
@@ -39,12 +41,29 @@ public static class DependancyInjectionExtensions
     /// </summary>
     /// <param name="configuration">Current config</param>
     /// <param name="databaseName">Name of the database</param>
+    /// <remarks>Bear in mind that TypedParameter (with string type) is used to provide database name to the base context, thus your ctor can't have other string params</remarks>
     /// <returns>Current config</returns>
     public static MongoDbDataAccessConfiguration AddMongoDbContext<TContext>(this MongoDbDataAccessConfiguration configuration,
         string databaseName) where TContext : MongoDbContext
     {
-        configuration.Builder.RegisterType(typeof(TContext)).AsSelf().UsingConstructor(typeof(string))
-            .WithParameter("database", databaseName).InstancePerLifetimeScope();
+        configuration.Builder.RegisterType(typeof(TContext)).AsSelf()
+            .WithParameter(new TypedParameter(typeof(string), databaseName)).InstancePerLifetimeScope();
+
+        return configuration;
+    }
+
+    /// <summary>
+    /// Adds database context to the data access layer
+    /// </summary>
+    /// <param name="configuration">Current config</param>
+    /// <param name="databaseName">Name of the database</param>
+    /// <param name="parameters">Parameters to pass to the constructor</param>
+    /// <returns>Current config</returns>
+    public static MongoDbDataAccessConfiguration AddMongoDbContext<TContext>(this MongoDbDataAccessConfiguration configuration,
+        string databaseName, IEnumerable<Parameter> parameters) where TContext : MongoDbContext
+    {
+        configuration.Builder.RegisterType(typeof(TContext)).AsSelf()
+            .WithParameters(parameters).InstancePerLifetimeScope();
 
         return configuration;
     }

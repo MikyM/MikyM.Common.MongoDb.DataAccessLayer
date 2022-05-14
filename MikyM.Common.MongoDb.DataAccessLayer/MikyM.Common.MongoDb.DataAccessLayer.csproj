@@ -4,7 +4,7 @@
 		<TargetFramework>net6.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<PackageId>MikyM.Common.MongoDb.DataAccessLayer</PackageId>
-		<Version>1.1.0</Version>
+		<Version>1.2.0</Version>
 		<Authors>Krzysztof Kupisz</Authors>
 		<PackageDescription>MongoDb data access layer.</PackageDescription>
 		<RepositoryUrl>https://github.com/MikyM/MikyM.Common.MongoDb.DataAccessLayer</RepositoryUrl>
