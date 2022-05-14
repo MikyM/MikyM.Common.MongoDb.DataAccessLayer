@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading;
+using MikyM.Common.DataAccessLayer.Repositories;
 using MongoDB.Driver;
 using MongoDB.Entities;
 #pragma warning disable CS1574, CS1584, CS1581, CS1580

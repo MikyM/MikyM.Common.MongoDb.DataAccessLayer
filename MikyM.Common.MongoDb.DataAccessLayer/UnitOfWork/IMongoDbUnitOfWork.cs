@@ -1,4 +1,4 @@
-﻿using MikyM.Common.MongoDb.DataAccessLayer.Repositories;
+﻿using MikyM.Common.DataAccessLayer.Repositories;
 using MongoDB.Entities;
 
 namespace MikyM.Common.MongoDb.DataAccessLayer.UnitOfWork;

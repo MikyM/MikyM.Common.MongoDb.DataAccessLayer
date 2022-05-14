@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using MikyM.Common.MongoDb.DataAccessLayer.Repositories;
+using MikyM.Common.DataAccessLayer.Repositories;
 using MikyM.Common.Utilities.Extensions;
 
 namespace MikyM.Common.MongoDb.DataAccessLayer.Helpers
