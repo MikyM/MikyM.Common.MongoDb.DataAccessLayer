@@ -17,9 +17,8 @@ public abstract class MongoDbContext : IDisposable
     public Transaction Transaction { get; private set; }
     
     /// <summary>
-    /// 
+    /// Creates new instance of Mongo Db context
     /// </summary>
-    /// <param name="databaseName"></param>
     public MongoDbContext(string databaseName)
     {
         DatabaseName = databaseName;

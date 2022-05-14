@@ -32,14 +32,26 @@ public static class DependancyInjectionExtensions
         builder.Register(x => config).As<IOptions<MongoDbDataAccessConfiguration>>().SingleInstance();
         
         builder.RegisterGeneric(typeof(MongoDbUnitOfWork<>)).As(typeof(IMongoDbUnitOfWork<>)).InstancePerLifetimeScope();
+    }
 
-        foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
-        {
-            var set = assembly.GetTypes()
-                .Where(x => x.IsAssignableTo(typeof(MongoDbContext)) && !x.IsAbstract);
+    /// <summary>
+    /// Adds database context to the data access layer
+    /// </summary>
+    /// <param name="configuration">Current config</param>
+    /// <param name="databaseName">Name of the database</param>
+    /// <returns>Current config</returns>
+    public static MongoDbDataAccessConfiguration AddMongoDbContext<TContext>(this MongoDbDataAccessConfiguration configuration,
+        string databaseName) where TContext : MongoDbContext
+    {
+        if (configuration.GetType().GetField("Builder", BindingFlags.Instance |
+                                                        BindingFlags.NonPublic |
+                                                        BindingFlags.Public)
+                ?.GetValue(configuration) is not ContainerBuilder builder)
+            throw new InvalidOperationException();
 
-            foreach (var t in set)
-                builder.RegisterType(t).AsSelf().InstancePerLifetimeScope();
-        }
+        configuration.Builder.RegisterType(typeof(TContext)).AsSelf().UsingConstructor(typeof(string))
+            .WithParameter("database", databaseName).InstancePerLifetimeScope();
+
+        return configuration;
     }
 }
