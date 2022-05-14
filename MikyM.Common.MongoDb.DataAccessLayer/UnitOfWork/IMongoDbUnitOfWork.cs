@@ -1,19 +1,23 @@
 ﻿using MikyM.Common.DataAccessLayer;
-using MongoDB.Entities;
+using MikyM.Common.MongoDb.DataAccessLayer.Context;
 
 namespace MikyM.Common.MongoDb.DataAccessLayer.UnitOfWork;
+
 
 /// <summary>
 /// Unit of work definition
 /// </summary>
 public interface IMongoDbUnitOfWork : IUnitOfWorkBase
 {
+}
+
+/// <summary>
+/// Unit of work definition
+/// </summary>
+public interface IMongoDbUnitOfWork<TContext> : IMongoDbUnitOfWork where TContext : MongoDbContext
+{
     /// <summary>
-    /// Inner <see cref="Transaction"/>
+    /// Current <see cref="MongoDbContext"/>
     /// </summary>
-    Transaction Transaction { get; }
-    /// <summary>
-    /// Name of the database for which this unit of work was created
-    /// </summary>
-    public string Database { get; }
+    TContext Context { get; }
 }

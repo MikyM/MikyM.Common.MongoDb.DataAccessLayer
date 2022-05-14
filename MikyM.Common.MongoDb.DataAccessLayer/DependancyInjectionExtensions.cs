@@ -2,6 +2,7 @@
 using Autofac;
 using Microsoft.Extensions.Options;
 using MikyM.Common.DataAccessLayer;
+using MikyM.Common.MongoDb.DataAccessLayer.Context;
 using MikyM.Common.MongoDb.DataAccessLayer.UnitOfWork;
 
 namespace MikyM.Common.MongoDb.DataAccessLayer;
@@ -29,16 +30,16 @@ public static class DependancyInjectionExtensions
         options?.Invoke(config);
 
         builder.Register(x => config).As<IOptions<MongoDbDataAccessConfiguration>>().SingleInstance();
-
-        builder.RegisterType<MongoDbUnitOfWorkFactory>().As<IMongoDbUnitOfWorkFactory>().InstancePerLifetimeScope();
-        builder.RegisterType<MongoDbUnitOfWork>().As<IMongoDbUnitOfWork>().UsingConstructor(typeof(IOptions<MongoDbDataAccessConfiguration>))
-            .InstancePerLifetimeScope();
-
-        if (config.Databases is null || config.Databases.Count <= 0) 
-            return;
         
-        foreach (var (database, _) in config.Databases)
-            builder.RegisterType<MongoDbUnitOfWork>().Named<IMongoDbUnitOfWork>(database)
-                .UsingConstructor(typeof(string), typeof(IOptions<MongoDbDataAccessConfiguration>)).WithParameter("database", database).InstancePerLifetimeScope();
+        builder.RegisterGeneric(typeof(MongoDbUnitOfWork<>)).As(typeof(IMongoDbUnitOfWork<>)).InstancePerLifetimeScope();
+
+        foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+        {
+            var set = assembly.GetTypes()
+                .Where(x => x.IsAssignableTo(typeof(MongoDbContext)) && !x.IsAbstract);
+
+            foreach (var t in set)
+                builder.RegisterType(t).AsSelf().InstancePerLifetimeScope();
+        }
     }
 }

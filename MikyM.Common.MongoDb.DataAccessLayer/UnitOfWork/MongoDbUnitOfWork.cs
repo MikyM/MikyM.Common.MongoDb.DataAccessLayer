@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Reflection;
 using Microsoft.Extensions.Options;
 using MikyM.Common.DataAccessLayer.Repositories;
+using MikyM.Common.MongoDb.DataAccessLayer.Context;
 using MikyM.Common.MongoDb.DataAccessLayer.Helpers;
 using MongoDB.Entities;
 
@@ -12,7 +13,7 @@ namespace MikyM.Common.MongoDb.DataAccessLayer.UnitOfWork;
 /// Unit of work implementation
 /// </summary>
 /// <inheritdoc cref="IMongoDbUnitOfWork"/>
-public sealed class MongoDbUnitOfWork : IMongoDbUnitOfWork
+public sealed class MongoDbUnitOfWork<TContext> : IMongoDbUnitOfWork<TContext> where TContext : MongoDbContext
 {
     // To detect redundant calls
     private bool _disposed;
@@ -28,29 +29,16 @@ public sealed class MongoDbUnitOfWork : IMongoDbUnitOfWork
     /// Repository entity type cache
     /// </summary>
     private ConcurrentDictionary<string, string>? _entityTypesOfRepositories;
-
-    /// <inheritdoc/>
-    public Transaction Transaction { get; private set; }
-    /// <inheritdoc />
-    public string Database { get; }
-
-    /// <summary>
-    /// Creates a new instance of <see cref="MongoDbUnitOfWork"/>
-    /// </summary>
-    public MongoDbUnitOfWork(IOptions<MongoDbDataAccessConfiguration> options)
-    {
-        Transaction = DB.Transaction();
-        Database = "default";
-        _options = options;
-    }
     
+    /// <inheritdoc/>
+    public TContext Context { get; }
+
     /// <summary>
-    /// Creates a new instance of <see cref="MongoDbUnitOfWork"/>
+    /// Creates a new instance of <see cref="MongoDbUnitOfWork{TContext}"/>
     /// </summary>
-    public MongoDbUnitOfWork(string database, IOptions<MongoDbDataAccessConfiguration> options)
+    public MongoDbUnitOfWork(TContext context,IOptions<MongoDbDataAccessConfiguration> options)
     {
-        Transaction = DB.Transaction(database);
-        Database = database;
+        Context = context;
         _options = options;
     }
 
@@ -85,7 +73,7 @@ public sealed class MongoDbUnitOfWork : IMongoDbUnitOfWork
         var instance = Activator.CreateInstance(type,
             BindingFlags.NonPublic | BindingFlags.Instance, null, new object[]
             {
-                Transaction
+                Context
             }, CultureInfo.InvariantCulture);
 
         if (instance is null) throw new InvalidOperationException($"Couldn't create an instance of {name}");
@@ -107,34 +95,15 @@ public sealed class MongoDbUnitOfWork : IMongoDbUnitOfWork
 
     /// <inheritdoc />
     public async Task RollbackAsync()
-    {
-        await Transaction.AbortAsync();
-    }
+        => await Context.RollbackAsync();
 
     /// <inheritdoc />
     public async Task CommitAsync()
-    {
-        if (_options.Value.OnBeforeSaveChangesActions is not null &&
-            _options.Value.OnBeforeSaveChangesActions.TryGetValue(Database, out var action))
-            await action.Invoke(this);
-        
-        await Transaction.CommitAsync();
-        Transaction?.Dispose();
-        Transaction = DB.Transaction();
-    }
+        => await Context.CommitAsync();
 
     /// <inheritdoc />
     public async Task CommitAsync(string userId)
-    {
-        if (_options.Value.OnBeforeSaveChangesActions is not null &&
-            _options.Value.OnBeforeSaveChangesActions.TryGetValue(Database, out var action))
-            await action.Invoke(this);
-        
-        Transaction.ModifiedBy = new AuditEntry(userId);
-        await Transaction.CommitAsync();
-        Transaction?.Dispose();
-        Transaction = DB.Transaction();
-    }
+        => await Context.CommitAsync(userId);
 
     // Public implementation of Dispose pattern callable by consumers.
     /// <inheritdoc />
@@ -151,7 +120,7 @@ public sealed class MongoDbUnitOfWork : IMongoDbUnitOfWork
 
         if (disposing)
         {
-            Transaction?.Dispose();
+            Context.Dispose();
         }
 
         _repositories = null;

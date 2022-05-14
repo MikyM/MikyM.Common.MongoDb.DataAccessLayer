@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Threading;
+using MikyM.Common.MongoDb.DataAccessLayer.Context;
 using MongoDB.Entities;
 
 namespace MikyM.Common.MongoDb.DataAccessLayer.Repositories;
@@ -12,29 +13,29 @@ namespace MikyM.Common.MongoDb.DataAccessLayer.Repositories;
 public class MongoDbRepository<TEntity> : ReadOnlyMongoDbRepository<TEntity>, IMongoDbRepository<TEntity>
     where TEntity : SnowflakeMongoDbEntity
 {
-    internal MongoDbRepository(Transaction transaction) : base(transaction)
+    internal MongoDbRepository(MongoDbContext context) : base(context)
     {
     }
 
     /// <inheritdoc />
     public virtual async Task AddAsync(TEntity entity, CancellationToken cancellationToken = default)
-        => await Transaction.InsertAsync(entity, cancellationToken);
+        => await Context.Transaction.InsertAsync(entity, cancellationToken);
 
     /// <inheritdoc />
     public virtual async Task AddRangeAsync(IEnumerable<TEntity> entities, CancellationToken cancellationToken = default)
-        => await Transaction.InsertAsync(entities, cancellationToken);
+        => await Context.Transaction.InsertAsync(entities, cancellationToken);
 
     /// <inheritdoc />
     public virtual async Task DeleteAsync(Expression<Func<TEntity, bool>> expression)
-        => await Transaction.DeleteAsync(expression);
+        => await Context.Transaction.DeleteAsync(expression);
     
     /// <inheritdoc />
     public virtual async Task DeleteAsync(string id)
-        => await Transaction.DeleteAsync<TEntity>(id);
+        => await Context.Transaction.DeleteAsync<TEntity>(id);
 
     /// <inheritdoc />
     public virtual async Task DeleteRangeAsync(IEnumerable<string> ids)
-        => await Transaction.DeleteAsync<TEntity>(ids);
+        => await Context.Transaction.DeleteAsync<TEntity>(ids);
 
     /// <inheritdoc />
     public virtual async Task DisableAsync(TEntity entity)
@@ -42,19 +43,19 @@ public class MongoDbRepository<TEntity> : ReadOnlyMongoDbRepository<TEntity>, IM
 
     /// <inheritdoc />
     public virtual Update<TEntity> Update(TEntity entity)
-        => Transaction.Update<TEntity>();
+        => Context.Transaction.Update<TEntity>();
 
     /// <inheritdoc />
     public virtual UpdateAndGet<TEntity, TEntity> UpdateAndGet(TEntity entity)
-        => Transaction.UpdateAndGet<TEntity>();
+        => Context.Transaction.UpdateAndGet<TEntity>();
     
     /// <inheritdoc />
     public virtual UpdateAndGet<TEntity, TProjection> UpdateAndGet<TProjection>(TEntity entity)
-        => Transaction.UpdateAndGet<TEntity, TProjection>();
+        => Context.Transaction.UpdateAndGet<TEntity, TProjection>();
     
     /// <inheritdoc />
     public virtual async Task DisableAsync(string id)
-        => await Transaction.Update<TEntity>().Match(x => x.ID == id).Modify(x => x.Set(y => y.IsDisabled, true))
+        => await Context.Transaction.Update<TEntity>().Match(x => x.ID == id).Modify(x => x.Set(y => y.IsDisabled, true))
             .ExecuteAsync();
 
 
@@ -64,6 +65,6 @@ public class MongoDbRepository<TEntity> : ReadOnlyMongoDbRepository<TEntity>, IM
 
     /// <inheritdoc />
     public virtual async Task DisableRangeAsync(IEnumerable<string> ids)
-        => await Transaction.Update<TEntity>().Match(x => ids.Contains(x.ID)).Modify(x => x.Set(y => y.IsDisabled, true))
+        => await Context.Transaction.Update<TEntity>().Match(x => ids.Contains(x.ID)).Modify(x => x.Set(y => y.IsDisabled, true))
             .ExecuteAsync();
 }
