@@ -56,11 +56,9 @@ public static class DependancyInjectionExtensions
     /// Adds database context to the data access layer
     /// </summary>
     /// <param name="configuration">Current config</param>
-    /// <param name="databaseName">Name of the database</param>
     /// <param name="parameters">Parameters to pass to the constructor</param>
     /// <returns>Current config</returns>
-    public static MongoDbDataAccessConfiguration AddMongoDbContext<TContext>(this MongoDbDataAccessConfiguration configuration,
-        string databaseName, IEnumerable<Parameter> parameters) where TContext : MongoDbContext
+    public static MongoDbDataAccessConfiguration AddMongoDbContext<TContext>(this MongoDbDataAccessConfiguration configuration, IEnumerable<Parameter> parameters) where TContext : MongoDbContext
     {
         configuration.Builder.RegisterType(typeof(TContext)).AsSelf()
             .WithParameters(parameters).InstancePerLifetimeScope();
